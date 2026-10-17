@@ -1,0 +1,226 @@
+{
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "01_empty",
+      "size": 1,
+      "puzzle": "puzzles/01_empty.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "1x1: single empty cell",
+      "source": "synthetic",
+      "solution": "solutions/01_empty.json"
+    },
+    {
+      "id": "01_solved",
+      "size": 1,
+      "puzzle": "puzzles/01_solved.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "1x1: already solved",
+      "source": "synthetic",
+      "solution": "solutions/01_solved.json"
+    },
+    {
+      "id": "04_blank_8",
+      "size": 4,
+      "puzzle": "puzzles/04_blank_8.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "4x4: 8 empty cells, seed=401, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/04_blank_8.json"
+    },
+    {
+      "id": "04_blank_12",
+      "size": 4,
+      "puzzle": "puzzles/04_blank_12.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "4x4: 12 empty cells, seed=402, value shift=1",
+      "source": "synthetic",
+      "solution": "solutions/04_blank_12.json"
+    },
+    {
+      "id": "04_blank_16",
+      "size": 4,
+      "puzzle": "puzzles/04_blank_16.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "4x4: 16 empty cells, seed=403, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/04_blank_16.json"
+    },
+    {
+      "id": "09_blank_40",
+      "size": 9,
+      "puzzle": "puzzles/09_blank_40.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "9x9: 40 empty cells, seed=901, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/09_blank_40.json"
+    },
+    {
+      "id": "09_blank_60",
+      "size": 9,
+      "puzzle": "puzzles/09_blank_60.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "9x9: 60 empty cells, seed=902, value shift=1",
+      "source": "synthetic",
+      "solution": "solutions/09_blank_60.json"
+    },
+    {
+      "id": "16_blank_128",
+      "size": 16,
+      "puzzle": "puzzles/16_blank_128.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "16x16: 128 empty cells, seed=1601, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/16_blank_128.json"
+    },
+    {
+      "id": "16_blank_192",
+      "size": 16,
+      "puzzle": "puzzles/16_blank_192.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "16x16: 192 empty cells, seed=1602, value shift=1",
+      "source": "synthetic",
+      "solution": "solutions/16_blank_192.json"
+    },
+    {
+      "id": "25_blank_200",
+      "size": 25,
+      "puzzle": "puzzles/25_blank_200.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "25x25: 200 empty cells, seed=2501, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/25_blank_200.json"
+    },
+    {
+      "id": "25_blank_400",
+      "size": 25,
+      "puzzle": "puzzles/25_blank_400.json",
+      "expected": "SAT",
+      "tier": "regular",
+      "description": "25x25: 400 empty cells, seed=2502, value shift=1",
+      "source": "synthetic",
+      "solution": "solutions/25_blank_400.json"
+    },
+    {
+      "id": "36_blank_360",
+      "size": 36,
+      "puzzle": "puzzles/36_blank_360.json",
+      "expected": "SAT",
+      "tier": "large",
+      "description": "36x36: 360 empty cells, seed=3601, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/36_blank_360.json"
+    },
+    {
+      "id": "49_blank_490",
+      "size": 49,
+      "puzzle": "puzzles/49_blank_490.json",
+      "expected": "SAT",
+      "tier": "large",
+      "description": "49x49: 490 empty cells, seed=4901, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/49_blank_490.json"
+    },
+    {
+      "id": "100_blank_1",
+      "size": 100,
+      "puzzle": "puzzles/100_blank_1.json",
+      "expected": "SAT",
+      "tier": "stress",
+      "description": "100x100: 1 empty cells, seed=10001, value shift=0",
+      "source": "synthetic",
+      "solution": "solutions/100_blank_1.json"
+    },
+    {
+      "id": "04_unsat_row",
+      "size": 4,
+      "puzzle": "puzzles/04_unsat_row.json",
+      "expected": "UNSAT",
+      "tier": "regular",
+      "description": "Two clues with value 1 in the same row",
+      "source": "synthetic"
+    },
+    {
+      "id": "04_unsat_column",
+      "size": 4,
+      "puzzle": "puzzles/04_unsat_column.json",
+      "expected": "UNSAT",
+      "tier": "regular",
+      "description": "Two clues with value 1 in the same column, in different boxes",
+      "source": "synthetic"
+    },
+    {
+      "id": "04_unsat_box",
+      "size": 4,
+      "puzzle": "puzzles/04_unsat_box.json",
+      "expected": "UNSAT",
+      "tier": "regular",
+      "description": "Two clues with value 1 in the same box, in different rows and columns",
+      "source": "synthetic"
+    },
+    {
+      "id": "04_unsat_no_duplicate",
+      "size": 4,
+      "puzzle": "puzzles/04_unsat_no_duplicate.json",
+      "expected": "UNSAT",
+      "tier": "regular",
+      "description": "No directly conflicting clues; ruled out by enumerating all 288 4x4 solutions",
+      "source": "synthetic"
+    },
+    {
+      "id": "invalid_empty",
+      "size": 0,
+      "puzzle": "puzzles/invalid_empty.json",
+      "expected": "INVALID",
+      "tier": "regular",
+      "description": "Empty board",
+      "source": "synthetic"
+    },
+    {
+      "id": "invalid_non_square_size",
+      "size": 3,
+      "puzzle": "puzzles/invalid_non_square_size.json",
+      "expected": "INVALID",
+      "tier": "regular",
+      "description": "N=3 is not a perfect square",
+      "source": "synthetic"
+    },
+    {
+      "id": "invalid_ragged",
+      "size": 4,
+      "puzzle": "puzzles/invalid_ragged.json",
+      "expected": "INVALID",
+      "tier": "regular",
+      "description": "A row has fewer than N cells",
+      "source": "synthetic"
+    },
+    {
+      "id": "invalid_out_of_range",
+      "size": 4,
+      "puzzle": "puzzles/invalid_out_of_range.json",
+      "expected": "INVALID",
+      "tier": "regular",
+      "description": "Value 5 is outside the range 0..4",
+      "source": "synthetic"
+    },
+    {
+      "id": "invalid_boolean",
+      "size": 4,
+      "puzzle": "puzzles/invalid_boolean.json",
+      "expected": "INVALID",
+      "tier": "regular",
+      "description": "A Boolean is not a valid Sudoku value",
+      "source": "synthetic"
+    }
+  ]
+}
