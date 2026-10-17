@@ -1,69 +1,83 @@
-from itertools import combinations
-from pysat.formula import CNF
+from itertools import count
+from math import isqrt
 
-def var_id(r, c, v):
-    return 81*r + 9*c + v
 
-def exactly_one(cnf, variables):
-    cnf.append(variables)
-    for a, b in combinations(variables, 2):
-        cnf.append([-a, -b])
+def validate_board(board):
+    if not isinstance(board, list) or not board:
+        raise ValueError("Board must be a non-empty list of rows")
+
+    size = len(board)
+    box_size = isqrt(size)
+    if box_size * box_size != size:
+        raise ValueError("Board size must be a perfect square")
+    if any(not isinstance(row, list) or len(row) != size for row in board):
+        raise ValueError("Board must have N rows, each with N values")
+    if any(type(value) is not int or not 0 <= value <= size
+           for row in board for value in row):
+        raise ValueError(f"Board values must be integers from 0 to {size}")
+    return size, box_size
+
+
+def var_id(r, c, v, size=9):
+    return size * size * r + size * c + v
+
+
+def exactly_one(variables, next_aux):
+    yield variables
+    if len(variables) <= 1:
+        return
+
+    previous = next(next_aux)
+    yield [-variables[0], previous]
+    for variable in variables[1:-1]:
+        current = next(next_aux)
+        yield [-variable, current]
+        yield [-previous, current]
+        yield [-variable, -previous]
+        previous = current
+    yield [-variables[-1], -previous]
+
+
+def iter_sudoku_clauses(board):
+    size, box_size = validate_board(board)
+    next_aux = count(size ** 3 + 1)
+
+    # Each cell has one value.
+    for r in range(size):
+        for c in range(size):
+            yield from exactly_one(
+                [var_id(r, c, v, size) for v in range(1, size + 1)], next_aux
+            )
+
+    # Each value occurs once in each row and column.
+    for r in range(size):
+        for v in range(1, size + 1):
+            yield from exactly_one(
+                [var_id(r, c, v, size) for c in range(size)], next_aux
+            )
+    for c in range(size):
+        for v in range(1, size + 1):
+            yield from exactly_one(
+                [var_id(r, c, v, size) for r in range(size)], next_aux
+            )
+
+    # Each value occurs once in each box.
+    for box_r in range(0, size, box_size):
+        for box_c in range(0, size, box_size):
+            for v in range(1, size + 1):
+                yield from exactly_one(
+                    [var_id(r, c, v, size)
+                     for r in range(box_r, box_r + box_size)
+                     for c in range(box_c, box_c + box_size)],
+                    next_aux,
+                )
+
+    for r, row in enumerate(board):
+        for c, value in enumerate(row):
+            if value:
+                yield [var_id(r, c, value, size)]
+
 
 def encode_sudoku(board):
-    if len(board) != 9 or any(len(row) != 9 for row in board):
-        raise ValueError("Board must be 9x9")
-
-    if any(
-        type(v) is not int or not 0 <= v <= 9
-        for row in board for v in row
-        ):
-        raise ValueError("Values must be integers from 0 to 9")
-
-    cnf = CNF();
-
-    # 1. Each cell contains exactly one value.
-    for r in range(9):
-        for c in range(9):
-            variables = [
-                var_id(r, c, v)
-                for v in range(1, 10)
-            ]
-            exactly_one(cnf, variables)
-
-    # 2. Each value occurs exactly once per row.
-    for r in range(9):
-        for v in range(1, 10):
-            variables = [
-                var_id(r, c, v)
-                for c in range(9)
-            ]
-            exactly_one(cnf, variables)
-
-    # 3. Each value occurs exactly once per column.
-    for c in range(9):
-        for v in range(1, 10):
-            variables = [
-                var_id(r, c, v)
-                for r in range(9)
-            ]
-            exactly_one(cnf, variables)
-
-    # 4. Each value occurs exactly once per 3x3 box.
-    for box_r in range(0, 9, 3):
-        for box_c in range(0, 9, 3):
-            for v in range(1, 10):
-                variables = [
-                    var_id(r, c, v)
-                    for r in range(box_r, box_r + 3)
-                    for c in range(box_c, box_c + 3)
-                ]
-                exactly_one(cnf, variables)
-
-    # 5. Given clues.
-    for r in range(9):
-        for c in range(9):
-            v = board[r][c]
-            if v != 0:
-                cnf.append([var_id(r, c, v)])
-
-    return cnf
+    from pysat.formula import CNF
+    return CNF(from_clauses=iter_sudoku_clauses(board))
