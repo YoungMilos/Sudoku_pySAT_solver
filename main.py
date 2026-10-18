@@ -4,9 +4,6 @@ import argparse
 import json
 from pathlib import Path
 
-from src.solver import solve_sudoku
-
-
 def main():
     parser = argparse.ArgumentParser(description="Solve an N x N Sudoku puzzle")
     parser.add_argument(
@@ -14,15 +11,44 @@ def main():
         default=Path(__file__).resolve().parent / "data" / "puzzle.json",
         help="path to a JSON puzzle (default: data/puzzle.json)",
     )
+    parser.add_argument("--solver", choices=("sat", "cp-sat"), default="sat",
+                        help="solver to use (default: sat)")
+    parser.add_argument("--time-limit", type=float, default=None,
+                        help="CP-SAT solve time limit in seconds")
+    parser.add_argument("--workers", type=int, default=None,
+                        help="number of CP-SAT search workers (default: 1)")
+    parser.add_argument("--stats", action="store_true",
+                        help="print CP-SAT model and solve times")
     args = parser.parse_args()
+
+    if args.solver == "sat" and (args.time_limit is not None or args.workers is not None or args.stats):
+        parser.error("--time-limit, --workers and --stats require --solver cp-sat")
 
     try:
         with args.puzzle.open(encoding="utf-8") as puzzle_file:
             puzzle = json.load(puzzle_file)
-        solution = solve_sudoku(puzzle)
+        if args.solver == "sat":
+            from src.solver import solve_sudoku
+            solution = solve_sudoku(puzzle)
+        else:
+            from src.cp_sat_solver import solve_sudoku_cp_sat
+            result = solve_sudoku_cp_sat(puzzle, time_limit=args.time_limit,
+                                         num_workers=args.workers if args.workers is not None else 1)
+            solution = result.solution
     except (OSError, ValueError) as error:
         parser.exit(1, f"Error: {error}\n")
 
+    if args.solver == "cp-sat":
+        if args.stats:
+            from importlib.metadata import version
+            print(f"OR-Tools version: {version('ortools')}")
+            print(f"CP-SAT workers: {args.workers if args.workers is not None else 1}")
+            print(f"CP-SAT time limit: {args.time_limit if args.time_limit is not None else 'none'}")
+            print(f"CP-SAT status: {result.native_status}")
+            print(f"Model build time: {result.model_time:.6f} s")
+            print(f"Solve time: {result.solve_time:.6f} s")
+        if result.status in ("UNKNOWN", "MODEL_INVALID"):
+            parser.exit(2, f"CP-SAT could not determine a solution: {result.native_status}\n")
     if solution is None:
         print("Sudoku has no solution.")
     else:
