@@ -1,0 +1,3 @@
+python-sat
+ortools
+gurobipy==13.0.3
