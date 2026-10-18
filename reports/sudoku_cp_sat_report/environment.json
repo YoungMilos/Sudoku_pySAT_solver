@@ -1,0 +1,18 @@
+{
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "processor": "AMD64 Family 25 Model 117 Stepping 2, AuthenticAMD",
+  "pysat": "1.9.dev16",
+  "ortools": "9.15.6755",
+  "gurobi": [
+    13,
+    0,
+    3
+  ],
+  "repetitions": 3,
+  "external_timeout_seconds": 30,
+  "cp_sat_workers": 1,
+  "gurobi_threads": 1,
+  "date_local": "2026-10-18 16:13:12 +0700",
+  "processor_name": "AMD Ryzen 7 8845H w/ Radeon 780M Graphics"
+}

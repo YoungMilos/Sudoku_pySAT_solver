@@ -1,0 +1,27 @@
+\begin{table}[!htbp]
+\caption{Median model plus solve time in seconds over three repetitions. SAT denotes Glucose3; Gurobi uses a binary MIP; NR denotes not run.}
+\label{tab:results}
+\centering
+\begin{tabular}{lrrlrrr}
+\toprule
+Instance & $N$ & Blanks & Status & SAT (s) & CP-SAT (s) & Gurobi (s) \\
+\midrule
+04\_blank\_8 & 4 & 8 & SAT & 0.0006 & 0.0052 & 0.0097 \\
+04\_blank\_12 & 4 & 12 & SAT & 0.0005 & 0.0050 & 0.0110 \\
+04\_blank\_16 & 4 & 16 & SAT & 0.0004 & 0.0107 & 0.0096 \\
+09\_blank\_40 & 9 & 40 & SAT & 0.0050 & 0.0071 & 0.0159 \\
+09\_blank\_60 & 9 & 60 & SAT & 0.0049 & 0.0203 & 0.0206 \\
+16\_blank\_128 & 16 & 128 & SAT & 0.0301 & 0.0151 & 0.0436 \\
+16\_blank\_192 & 16 & 192 & SAT & 0.0314 & 0.1010 & 0.0594 \\
+25\_blank\_200 & 25 & 200 & SAT & 0.1285 & 0.0163 & 0.1245 \\
+25\_blank\_400 & 25 & 400 & SAT & 0.1877 & 0.2440 & 10.3765 \\
+36\_blank\_360 & 36 & 360 & SAT & 0.4185 & 0.1382 & 0.4317 \\
+49\_blank\_490 & 49 & 490 & SAT & 1.0604 & 0.9954 & 1.5177 \\
+100\_blank\_1 & 100 & 1 & SAT & NR & 0.1836 & NR \\
+04\_unsat\_row & 4 & 14 & UNSAT & 0.0006 & 0.0134 & 0.0133 \\
+04\_unsat\_column & 4 & 14 & UNSAT & 0.0006 & 0.0037 & 0.0173 \\
+04\_unsat\_box & 4 & 14 & UNSAT & 0.0005 & 0.0225 & 0.0101 \\
+04\_unsat\_no\_duplicate & 4 & 10 & UNSAT & 0.0004 & 0.0039 & 0.0101 \\
+\bottomrule
+\end{tabular}
+\end{table}

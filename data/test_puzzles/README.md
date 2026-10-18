@@ -1,47 +1,37 @@
-# Bộ dữ liệu kiểm thử độ đúng Sudoku
+# Sudoku correctness test dataset
 
-`manifest.json` liệt kê từng file puzzle, kích thước, kết quả mong đợi và nhóm
-chạy. Các file trong `puzzles/` là mảng JSON có thể đưa trực tiếp cho `main.py`.
-Với trường hợp SAT, `solutions/` chứa một nghiệm mẫu tương ứng.
+`manifest.json` lists each puzzle file, board size, expected result, and test tier. Files in `puzzles/` are JSON arrays that can be passed directly to `main.py`. For satisfiable cases, `solutions/` contains a corresponding example solution.
 
-## Nguồn và cách tạo
+## Provenance and generation
 
-Toàn bộ puzzle trong thư mục này được **tự tạo cho dự án**, không sao chép từ
-nguồn bên ngoài. Script `generate.py` lưu công thức và các seed để tái tạo:
+All puzzles in this directory were generated for this project; none were copied from an external source. The `generate.py` script records the formula and random seeds needed to reproduce them:
 
-- Với N = k², tạo bảng hoàn chỉnh bằng
-  `grid[r][c] = (r*k + r//k + c + shift) % N + 1`.
-- Xóa số ô ghi trong manifest, dùng `random.Random(seed).sample` với seed cố
-  định. Nghiệm ban đầu được lưu làm minh chứng tồn tại nghiệm; việc xóa ô
-  **không chứng minh tính duy nhất**. Trường hợp 4x4 rỗng có nhiều nghiệm.
-- Các trường hợp UNSAT được tự xây dựng. Ba trường hợp có clue mâu thuẫn
-  trực tiếp trong hàng, cột hoặc khối. Trường hợp `04_unsat_no_duplicate`
-  không có clue lặp trực tiếp; kiểm thử liệt kê độc lập toàn bộ 288 nghiệm
-  Sudoku 4x4 và xác nhận không nghiệm nào phù hợp.
-- Các file `invalid_*` cố tình sai định dạng hoặc miền giá trị và phải gây
-  `ValueError`. Chúng không phải puzzle UNSAT.
+- For `N = k²`, construct a completed grid with `grid[r][c] = (r*k + r//k + c + shift) % N + 1`.
+- Remove the number of cells specified in the manifest using `random.Random(seed).sample` with a fixed seed. The original grid is saved as a witness that a solution exists. Removing cells does **not** establish uniqueness; the empty `4 x 4` puzzle has multiple solutions.
+- The unsatisfiable cases were constructed for this dataset. Three have directly conflicting clues in a row, column, or block. `04_unsat_no_duplicate` has no immediate duplicate clue; an independent check enumerates all 288 completed `4 x 4` Sudoku grids and finds none compatible with its clues.
+- The `invalid_*` files deliberately contain malformed shapes or out-of-range values and should raise `ValueError`. They are not unsatisfiable puzzles.
 
-Puzzle mẫu `data/puzzle.json` đã có sẵn trong dự án trước khi tạo bộ này;
-nguồn gốc ban đầu của nó chưa được xác minh, nên không gán tác giả hay nguồn.
+The example puzzle at `data/puzzle.json` predates this dataset. Its original source has not been verified, so no external attribution is claimed for it.
 
-Các bảng SAT tự sinh đều dựa trên cùng một họ mẫu và có cấu trúc khá đều. Đây
-là dữ liệu kiểm tra độ đúng, **không phải** bộ benchmark đại diện cho độ khó
-hoặc hiệu năng của solver, nhất là mẫu 100x100 chỉ có một ô trống.
+The satisfiable generated boards belong to one regular pattern family. This dataset is intended to check correctness; it is **not** a representative benchmark of puzzle difficulty or solver performance. In particular, the `100 x 100` example has only one empty cell.
 
-## Chạy kiểm thử
+## Run the tests
 
-Từ thư mục gốc dự án, sau khi cài `python-sat` vào `.venv`:
+From the project root, after installing the dependencies in `.venv`:
 
 ```powershell
 & .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
 
-Lệnh mặc định chạy các trường hợp tới 25x25 với cả SAT và CP-SAT (nếu đã cài
-thư viện tương ứng). Để chạy thêm 36x36 và 49x49:
+The default suite covers cases up to `25 x 25` with SAT and CP-SAT when the corresponding packages are installed. Gurobi tests require a valid license and are enabled separately:
 
-Gurobi dùng license riêng nên chỉ được chạy trong bộ kiểm thử khi đặt
-`$env:SUDOKU_RUN_GUROBI = '1'`. Có thể kết hợp biến này với
-`SUDOKU_RUN_LARGE` để kiểm tra 36x36 và 49x49.
+```powershell
+$env:SUDOKU_RUN_GUROBI = '1'
+& .\.venv\Scripts\python.exe -m unittest discover -s tests -v
+Remove-Item Env:SUDOKU_RUN_GUROBI
+```
+
+Enable the `36 x 36` and `49 x 49` cases with `SUDOKU_RUN_LARGE`. This setting can be combined with `SUDOKU_RUN_GUROBI`:
 
 ```powershell
 $env:SUDOKU_RUN_LARGE = '1'
@@ -49,8 +39,7 @@ $env:SUDOKU_RUN_LARGE = '1'
 Remove-Item Env:SUDOKU_RUN_LARGE
 ```
 
-100x100 là kiểm tra tự chọn có thể tốn nhiều thời gian và RAM; chỉ chạy khi
-máy đủ tài nguyên:
+The optional `100 x 100` stress case can take significant time and memory. Run it only when the machine has sufficient resources:
 
 ```powershell
 $env:SUDOKU_RUN_STRESS = '1'
@@ -58,6 +47,10 @@ $env:SUDOKU_RUN_STRESS = '1'
 Remove-Item Env:SUDOKU_RUN_STRESS
 ```
 
-Tái tạo các file do script quản lý bằng
-`& .\.venv\Scripts\python.exe data/test_puzzles/generate.py`. Lệnh này ghi đè
-các file fixture cùng tên và `manifest.json`.
+To regenerate the files managed by the script, run:
+
+```powershell
+& .\.venv\Scripts\python.exe data/test_puzzles/generate.py
+```
+
+This command overwrites fixtures with matching names and `manifest.json`.

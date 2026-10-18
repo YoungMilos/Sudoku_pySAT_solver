@@ -1,0 +1,88 @@
+\documentclass[a4paper,fleqn]{cas-sc}
+\usepackage{amsmath,amssymb,booktabs,array,url}
+\usepackage[numbers]{natbib}
+\usepackage{hyperref}
+\shorttitle{SAT, CP-SAT and Gurobi for generalized Sudoku}
+\shortauthors{Nguyen Tran Hoang Hieu}
+\ExplSyntaxOn
+\cs_set:Npn \__first_footerline:
+  { \small\sffamily \__short_authors: :~\rmfamily\itshape Course~project~report }
+\ExplSyntaxOff
+\RenewDocumentCommand \printorcid {} {}
+\begin{document}
+\title [mode=title]{Solving Generalized Sudoku with SAT, CP-SAT and Gurobi MIP}
+\author[1]{Nguy{\~{\^e}}n Tr{\`{\^a}}n Ho{\`a}ng Hi{\'{\^e}}u}
+\affiliation[1]{organization={VNU University of Engineering and Technology}}
+\begin{abstract}
+This paper presents a generalized Sudoku solver based on propositional satisfiability and compares it with OR-Tools CP-SAT and Gurobi MIP. For an \(N\times N\) board, where \(N\) is a perfect square, the SAT formulation uses Boolean cell-value variables and a sequential-counter encoding of exactly-one constraints; Glucose3 is called through PySAT. The CP-SAT model uses integer cell variables and all-different constraints, while the Gurobi model uses binary assignment variables and linear exactly-one equations. We evaluate all three implementations on a small synthetic collection containing satisfiable and unsatisfiable instances, with three isolated-process repetitions and one worker or thread per method. Solutions are checked independently against clues and Sudoku rules. The experiments cover sizes up to \(49\times49\) for all three solvers; a nearly completed \(100\times100\) board is also evaluated with CP-SAT alone. These results demonstrate the implementations on the tested instances but are not a representative benchmark of difficult Sudoku or evidence that one approach is generally faster. SAT and Gurobi on the \(100\times100\) case and comparisons with other exact solvers remain future work.
+\end{abstract}
+\begin{keywords}
+Sudoku \sep SAT solving \sep sequential counter \sep CP-SAT \sep mixed-integer programming
+\end{keywords}
+\maketitle
+
+\section{Introduction}
+Sudoku asks for a completion of a partially filled grid such that each row, column, and block contains each symbol exactly once. Its finite domains and interacting constraints make it a useful example for studying logical encodings and exact solving. SAT-based Sudoku encodings have been studied by Lynce and Ouaknine \cite{lynce}, who show how formulation choices affect inference. PySAT provides Python interfaces to several SAT solvers \cite{pysat}, while OR-Tools CP-SAT offers an alternative interface for integer constraint models \cite{cpsat}.
+
+This project extends an existing \(9\times9\) solver to generalized square-block Sudoku. It contributes an implementation of a sequential-counter SAT encoding, separate CP-SAT and Gurobi MIP models for comparison, independently checked synthetic test instances, and a reproducible preliminary experiment. The experiment compares the three implemented formulations, rather than isolating a single algorithmic component. Because the dataset is small and largely derived from one grid pattern, the results should not be generalized to arbitrary Sudoku distributions. CPLEX CP and CPLEX MIP, also mentioned in the course requirement, are outside the present comparison.
+
+\section{Problem definition}
+Let \(N=k^2\) for a positive integer \(k\). The input is an \(N\times N\) matrix \(P\), whose entries lie in \(\{0,1,\ldots,N\}\); zero denotes an empty cell. The task is to find \(Y\in\{1,\ldots,N\}^{N\times N}\) such that every row, every column, and every \(k\times k\) block contains all \(N\) values, and \(Y_{r,c}=P_{r,c}\) whenever \(P_{r,c}\ne0\). If no such matrix exists, the puzzle is unsatisfiable. Malformed inputs, such as non-square rows or values outside the allowed range, are rejected and are not classified as unsatisfiable puzzles. The implementation seeks one solution; it does not test whether that solution is unique.
+
+\section{Solving methods}
+\subsection{SAT formulation}
+For each row \(r\in\{0,\ldots,N-1\}\), column \(c\in\{0,\ldots,N-1\}\) and value \(v\in\{1,\ldots,N\}\), introduce a Boolean variable \(x_{r,c,v}\), true if and only if cell \((r,c)\) contains \(v\). Its positive integer identifier is \(N^2r+Nc+v\). Exactly-one (EO) constraints are imposed on the \(N\) values of each cell, the \(N\) cells of each row for each value, the \(N\) cells of each column for each value, and the \(N\) cells of each block for each value.
+For a clue \(P_{r,c}=v\), the unit clause \((x_{r,c,v})\) fixes the corresponding value. Each EO constraint is the conjunction of an at-least-one clause and an at-most-one (AMO) encoding. The AMO construction uses sequential auxiliary variables, following the sequential-counter idea of Sinz \cite{sinz}. For inputs \(z_1,\ldots,z_N\) with \(N\ge2\), it introduces \(s_1,\ldots,s_{N-1}\) and uses
+\begin{align}
+ &(\neg z_1\lor s_1)\land(\neg z_N\lor\neg s_{N-1})\\
+ &\quad\land\bigwedge_{i=2}^{N-1}[(\neg z_i\lor s_i)\land(\neg s_{i-1}\lor s_i)\land(\neg z_i\lor\neg s_{i-1})].
+\end{align}
+Intuitively, the auxiliary chain records whether an earlier input is true; a later input cannot also be true. The resulting formula has a satisfying assignment exactly when the Sudoku instance has a completion: the EO constraints enforce the Sudoku rules and clues, while any valid grid can be extended to the auxiliary variables. The solution is decoded from the true primary variables.
+
+For \(N\ge2\) there are \(N^3\) primary variables and \(4N^2\) EO groups. Each group uses \(N-1\) auxiliary variables and \(3N-3\) clauses including the at-least-one clause. Thus, with \(G\) clues, the generated formula has \(N^3+4N^2(N-1)\) variables and \(4N^2(3N-3)+G\) clauses. The \(N=1\) implementation is a special case without auxiliary variables. Although the generator streams clauses to Glucose3 instead of holding a separate complete CNF list in Python, the solver still stores internal data; streaming does not eliminate the substantial memory requirements of large instances.
+
+\subsection{CP-SAT comparison model}
+The second model declares integer variables \(Y_{r,c}\in\{1,\ldots,N\}\) directly. It imposes \(3N\) all-different constraints, one on each row, column and block, and fixes every clue through an equality. For this finite domain and group size, all-different implies that each group contains each value exactly once. OR-Tools CP-SAT combines SAT-based reasoning with constraint and integer programming techniques \cite{cpsat}. The code requests one worker for the comparisons. A feasible solution maps to SAT, and the native INFEASIBLE status maps to UNSAT. An UNKNOWN status, for example after a time limit, is not treated as proof of unsatisfiability. This is a feasibility model without an optimization objective; a solver's OPTIMAL status here should not be interpreted as a Sudoku objective value.
+
+\subsection{Gurobi MIP comparison model}
+The third model uses binary assignment variables \(z_{r,c,v}\), equal to one when cell \((r,c)\) contains value \(v\). It imposes the same four families of exactly-one constraints as the SAT model, but expresses each as a linear equality \(\sum z=1\), and adds one equality \(z_{r,c,v}=1\) for each clue. Thus the input model has \(N^3\) binary variables and \(4N^2+G\) linear equations for \(G\) clues. Gurobi \cite{gurobi} solves this feasibility MIP with one thread and stops after its first solution. A positive solution count maps to SAT, including when a time limit is reached with an incumbent; the native INFEASIBLE status maps to UNSAT. Other statuses without a solution remain UNKNOWN. Model construction time includes starting the licensed Gurobi environment. No objective value or uniqueness claim is inferred.
+
+\section{Experimental study}
+\subsection{Instances and correctness checks}
+All evaluated cases are from the project's synthetic dataset. Satisfiable boards are created by a deterministic cyclic completed grid, optionally shifted in value, followed by deletion of cells using a fixed random seed. Their original completed grids are stored as witnesses, but deletion does not establish uniqueness. Four \(4\times4\) unsatisfiable cases include three with immediate duplicate clues and one without an immediate duplicate. For the latter, the project's independent exhaustive check enumerates all 288 valid \(4\times4\) completed boards and finds none compatible with the clues. Invalid-input fixtures are tested separately and excluded from timing comparisons.
+
+The comparison includes the satisfiable cases of sizes 4, 9, 16, 25, 36 and 49, plus the four unsatisfiable \(4\times4\) instances. Every returned SAT solution is checked independently for row, column, block and clue consistency; UNSAT outcomes are checked against the expected fixture label. The latter is supported by explicit contradictions or exhaustive enumeration, rather than by cross-solver agreement alone. Each selected case is run three times per method in fresh processes. Method order is reversed on alternating repetitions. The \(100\times100\) instance has one blank and is run only with CP-SAT; SAT and Gurobi are not run on that input due to their large proposed input models. These are unmeasured cases, not timeouts or UNSAT results.
+
+\subsection{Environment and measurement protocol}
+The experiments use Python 3.12.14 on Windows 11 with an AMD Ryzen 7 8845H processor, python-sat 1.9.dev16, OR-Tools 9.15.6755 and Gurobi 13.0.3. Exact environment metadata and individual observations are supplied with the report. Each process has a 30-second external wall-clock limit covering process startup and the entire run; this is distinct from solver-only time limits. A timeout, error or unknown result is recorded explicitly rather than assigned a zero time or an UNSAT status. The recorded model and solve times are elapsed wall-clock measurements, and the table displays their sum; program startup, input file loading, result decoding and verification are outside the displayed total. For SAT, model time includes generation and insertion of clauses into Glucose3. For CP-SAT, model time covers construction of the Python model; compilation and presolve inside the solver call are included in solve time. For Gurobi, model time also includes environment startup and license validation. Consequently the internal phases are not directly equivalent, and the total is the more appropriate comparison for this experiment. System load was not controlled, and short runs may be affected by scheduling noise.
+
+\subsection{Results}
+Table~\ref{tab:results} reports the median over three runs for each instance and method. The raw CSV contains 138 runs across 16 instances; every run returned the expected status, and every reported SAT completion passed the independent checker. On the \(25\times25\) puzzle with 400 empty cells, median times were 0.1877 s for SAT, 0.2440 s for CP-SAT, and 10.3765 s for Gurobi. On the \(49\times49\) example, they were 1.0604 s, 0.9954 s and 1.5177 s respectively. CP-SAT's \(49\times49\) runs varied substantially, from 0.0701 s to 1.2508 s; these observations are too few to support a stable relative-speed claim. The \(100\times100\) CP-SAT median was 0.1836 s, while SAT and Gurobi were not run. The dataset contains only one or two examples at most of several larger sizes. The \(100\times100\) result establishes only that this particular almost-complete puzzle was solved, not that all three solvers can handle difficult \(100\times100\) puzzles. The data show the costs of the three modeled approaches under the stated measurement boundaries, not a general ranking across all Sudoku inputs.
+
+\input{results_table.tex}
+
+The structure of the models helps interpret the scaling results. At \(N=100\), the SAT construction has one million primary and 3.96 million auxiliary variables; the structural constraints alone generate 11.88 million clauses, before 9,999 clue clauses. The corresponding Gurobi input model would have one million binary variables and 40,000 structural linear equations, plus 9,999 clue equations. In contrast, the CP-SAT model presented through the API has 10,000 integer variables and 300 all-different constraints, plus the clue equalities. These are input-model counts; solvers can create additional internal representations, so they do not describe total memory use. The results do not measure peak memory, and no conclusion about memory consumption can be drawn from timings alone.
+
+\subsection{Limitations and threats to validity}
+The satisfiable instances share a synthetic base construction and are not independent samples of published hard puzzles. The larger cases are sparse in number and in some cases almost complete, so board size alone should not be equated with difficulty. Repeated measurements of the same puzzle estimate timing variation, not diversity across instances. No experimental comparison of AMO encodings, independent UNSAT proof checking, uniqueness analysis, peak memory measurement, or broad time-limit study is included. Only one formulation and worker setting is evaluated for each baseline; model design and solver versions can materially affect outcomes. Additional CPLEX CP and CPLEX MIP baselines are named in the assignment but are not implemented in this report. The Gurobi license requires online validation in the present environment, and its startup is included in measured model time.
+
+\section{Conclusion}
+The project implements generalized Sudoku using a sequential-counter SAT encoding with PySAT/Glucose3, a CP-SAT integer model and a Gurobi binary MIP. On the small synthetic collection, the tested outcomes agree with the known labels and checked solutions; the measured comparisons extend to \(49\times49\), with a separate nearly completed \(100\times100\) CP-SAT example. These are preliminary evidence of functional correctness and behavior on the supplied instances, not a claim of superiority. Further work should include established and more diverse benchmark sets, harder large puzzles, peak-memory measurements, comparisons among AMO encodings, and CPLEX CP and MIP baselines.
+
+\section*{Data availability and reproducibility}
+The code, synthetic instances, benchmark script, environment metadata, and raw results are available in the project repository at \url{https://github.com/YoungMilos/Sudoku_pySAT_solver}, under \path{src/}, \path{data/test_puzzles/}, and \path{reports/sudoku_cp_sat_report/} once the current report files are committed and pushed. From the project root, run \path{python reports/sudoku_cp_sat_report/benchmark.py} after installing the dependencies in \path{requirements.txt}. This regenerates the CSV and may produce different timings; run \path{make_table.py} in the report directory to update the printed table before recompiling.
+
+\section*{Author and course information}
+Nguy{\~{\^e}}n Tr{\`{\^a}}n Ho{\`a}ng Hi{\'{\^e}}u; student ID 24021477; class 2627I\_INT3011E\_3; supervisor T{\^o} V{\u a}n Kh{\'a}nh.
+
+\section*{Declaration of AI-assisted preparation}
+An AI assistant was used to help draft this report and prepare the experiment. The author must review the manuscript, verify the results and references, and take responsibility for the submitted version.
+
+\begin{thebibliography}{9}
+\bibitem{lynce} I. Lynce and J. Ouaknine, Sudoku as a SAT Problem, 9th International Symposium on Artificial Intelligence and Mathematics, 2006. \url{https://people.mpi-sws.org/~joel/publications/sudoku05abs.html}.
+\bibitem{sinz} C. Sinz, Towards an Optimal CNF Encoding of Boolean Cardinality Constraints, Principles and Practice of Constraint Programming -- CP 2005, pp. 827--831, 2005. doi:10.1007/11564751\_73.
+\bibitem{pysat} A. Ignatiev, A. Morgado, and J. Marques-Silva, PySAT: A Python Toolkit for Prototyping with SAT Oracles, SAT 2018, pp. 428--437, 2018. doi:10.1007/978-3-319-94144-8\_26.
+\bibitem{cpsat} L. Perron, F. Didier, and S. Gay, The CP-SAT-LP Solver, 29th International Conference on Principles and Practice of Constraint Programming, 2023. doi:10.4230/LIPIcs.CP.2023.3.
+\bibitem{gurobi} Gurobi Optimization, LLC, Gurobi Optimizer Reference Manual, version 13.0, 2026. \url{https://docs.gurobi.com/projects/optimizer/en/current/}.
+\end{thebibliography}
+\end{document}
