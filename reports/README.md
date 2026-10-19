@@ -22,10 +22,5 @@ main.tex before recompiling, since that prose describes the original
 measurements. The process timeout applies to startup and execution; reported
 time excludes startup, decoding and correctness checking.
 
-To reproduce the PDF, compile main.tex in a LaTeX installation that supports
-the Elsevier CAS packages. The bundled cas-sc files retain the official
-template licensing. Before submission, review the paper and push the new
-report, data, and code to the repository linked in the paper.
-
 Author: Nguyen Tran Hoang Hieu; student ID 24021477; class 2627I_INT3011E_3.
 Supervisor: To Van Khanh.
