@@ -42,7 +42,7 @@ The time limit covers the solver call, not model construction. The printed times
 
 ## Gurobi license
 
-Gurobi requires a valid license. Place `gurobi.lic` in the project root, or set `GRB_LICENSE_FILE` to the full path of a license stored elsewhere. The program uses the project-root file automatically when the environment variable is unset. The license file is ignored by Git; do not commit it to GitHub. Some license types require an internet connection for validation.
+Gurobi requires a valid license. Place `gurobi.lic` in the project root, or set `GRB_LICENSE_FILE` to the full path of a license stored elsewhere. The program uses the project-root file automatically when the environment variable is unset.
 
 ## Tests and report
 
