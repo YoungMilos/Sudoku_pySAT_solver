@@ -1,6 +1,7 @@
 # Generalized Sudoku report
 
-The paper in main.tex follows the Elsevier cas-sc single-column template.
+The paper in main.tex uses the Elsevier cas-sc single-column template with
+a simplified title block that omits article information, keywords, and the abstract.
 It is accompanied by the official cas-sc.cls and cas-common.sty template
 files, sourced from https://ctan.org/pkg/els-cas-templates.
 
@@ -26,5 +27,5 @@ the Elsevier CAS packages. The bundled cas-sc files retain the official
 template licensing. Before submission, review the paper and push the new
 report, data, and code to the repository linked in the paper.
 
-Author: Nguyễn Trần Hoàng Hiếu; student ID 24021477; class 2627I_INT3011E_3.
-Supervisor: Tô Văn Khánh.
+Author: Nguyen Tran Hoang Hieu; student ID 24021477; class 2627I_INT3011E_3.
+Supervisor: To Van Khanh.
